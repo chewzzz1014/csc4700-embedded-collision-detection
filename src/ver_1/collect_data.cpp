@@ -14,6 +14,9 @@ const char* apiKey = "YOUR_API_WRITE_KEY";
 // ADXL345 setup
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 
+// Built-in LED pin
+const int ledPin = 13;  // Built-in LED on pin 13
+
 WiFiClient client;
 
 void setup() {
@@ -26,6 +29,9 @@ void setup() {
   }
   accel.setRange(ADXL345_RANGE_16_G);
 
+  // Set LED pin as OUTPUT
+  pinMode(ledPin, OUTPUT);
+
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -36,6 +42,9 @@ void setup() {
 }
 
 void loop() {
+  // Check if the built-in LED is ON or OFF to simulate button press
+  int is_collision = (digitalRead(ledPin) == HIGH) ? 1 : 0;  // LED ON = collision (is_collision = 1)
+
   sensors_event_t event;
   accel.getEvent(&event);
 
@@ -43,9 +52,6 @@ void loop() {
   float x = event.acceleration.x;
   float y = event.acceleration.y;
   float z = event.acceleration.z;
-
-  // Manually label data
-  int is_collision = 0;  // Set this manually (1 for collision, 0 for no collision)
 
   // Upload data to ThingSpeak
   if (client.connect(server, 80)) {
