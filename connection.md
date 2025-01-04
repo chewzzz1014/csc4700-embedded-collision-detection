@@ -1,0 +1,11 @@
+- ADXL345 to Arduino Uno:
+    - 3.3V -> 3.3V
+    - GND -> GND
+    - SCL -> A5 (I2C Clock)
+    - SDA -> A4 (I2C Data)
+
+- ESP-32 to Arduino Uno:
+    - VCC -> 3.3V
+    - GND -> GND
+    - RX -> TX
+    - TX -> RX
