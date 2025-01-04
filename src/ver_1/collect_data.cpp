@@ -16,6 +16,7 @@ Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 
 // Built-in LED pin
 const int ledPin = 13;  // Built-in LED on pin 13
+int ledState = HIGH; // LOW; 
 
 WiFiClient client;
 
@@ -42,11 +43,13 @@ void setup() {
 }
 
 void loop() {
-  // Check if the built-in LED is ON or OFF to simulate button press
-  int is_collision = (digitalRead(ledPin) == HIGH) ? 1 : 0;  // LED ON = collision (is_collision = 1)
-
   sensors_event_t event;
   accel.getEvent(&event);
+
+  digitalWrite(ledPin, ledState);
+
+  // Check if the built-in LED is ON or OFF to simulate button press
+  int is_collision = (digitalRead(ledPin) == HIGH) ? 1 : 0;  // LED ON = collision (is_collision = 1)
 
   // Collect accelerometer data
   float x = event.acceleration.x;
