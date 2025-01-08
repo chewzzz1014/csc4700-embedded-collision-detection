@@ -4,21 +4,25 @@
 #include <WiFi.h>
 
 // WiFi credentials
-const char* ssid = "XXX";  
-const char* password = "XXX";  
+const char* ssid = "chewzzz";  
+const char* password = "72700cc80790";  
 
 // ThingSpeak settings
 const char* server = "api.thingspeak.com";
-const char* apiKey = "XXX"; // WRITE API KEY  
+const char* apiKey = "SSUKBQUP30C1SWX6"; // WRITE API KEY  
 
 // ADXL345 setup
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 
 // Built-in LED pin
 const int ledPin = 13;  // Built-in LED on pin 13
-int ledState = HIGH; // LOW; 
+int ledState = HIGH; 
 
 WiFiClient client;
+
+// Thresholds for detecting collision
+const float collisionThreshold = 3.0;  // Adjust based on sensitivity (e.g., 3g)
+const float normalGravity = 9.8;       // Approximate value for Earth's gravity
 
 void setup() {
   Serial.begin(9600);
@@ -62,13 +66,21 @@ void loop() {
   Serial.print(" Z: ");
   Serial.println(z);
 
-  // Update LED state
-  digitalWrite(ledPin, ledState);
-
-  // Check collision status based on LED
-  int is_collision = (digitalRead(ledPin) == HIGH) ? 1 : 0;  
+  // Determine if a collision occurred based on the acceleration values
+  int is_collision = 0;
+  float totalAcceleration = sqrt(x * x + y * y + z * z);  // Calculate magnitude of acceleration
+  if (abs(totalAcceleration - normalGravity) > collisionThreshold) {
+    is_collision = 1;  // Collision detected
+    ledState = HIGH;   // Turn on LED for visual feedback
+  } else {
+    is_collision = 0;  // No collision
+    ledState = LOW;    // Turn off LED
+  }
   Serial.print("Collision Status: ");
   Serial.println(is_collision);
+
+  // Update LED state
+  digitalWrite(ledPin, ledState);
 
   // Upload data to ThingSpeak
   Serial.println("Preparing data for ThingSpeak...");
@@ -117,7 +129,7 @@ void loop() {
     Serial.println("Error: Failed to connect to ThingSpeak server.");
   }
 
-  // Wait for 15 seconds before next reading (to respect ThingSpeak rate limit)
-  Serial.println("Waiting 5 seconds before next update...");
-  delay(5000);  
+  // Wait for 1 seconds before next reading
+  Serial.println("Waiting 1 seconds before next update...");
+  delay(1000);  
 }
