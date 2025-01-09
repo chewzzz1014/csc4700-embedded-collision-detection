@@ -4,18 +4,18 @@
 #include <WiFi.h>
 
 // WiFi credentials
-const char* ssid = "chewzzz";
-const char* password = "72700cc80790";
+const char* ssid = "XXX";
+const char* password = "XXX";
 
 // ThingSpeak settings
 const char* server = "api.thingspeak.com";
-const char* apiKey = "SSUKBQUP30C1SWX6"; // WRITE API KEY
+const char* apiKey = "XXX"; // WRITE API KEY
 
 // ADXL345 setup
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
-
+    
 // Data collection settings
-const int collectionTime = 5000;  // Timeframe for data collection in milliseconds (5 seconds)
+const int collectionTime = 3000;  // Timeframe for data collection in milliseconds (5 seconds)
 const int totalEntries = 5;      // Collect exactly 5 entries in each timeframe
 const int dataInterval = collectionTime / totalEntries; // Interval between each data point
 unsigned long startTime;
@@ -23,6 +23,8 @@ unsigned long startTime;
 // Collision and batch ID
 int is_collision = 0;             // Initialize as no collision
 unsigned long batch_id;           // Unique batch ID for each 5-second timeframe
+
+int round_id = 1;
 
 WiFiClient client;
 
@@ -60,6 +62,9 @@ void loop() {
     Serial.println("...");
     delay(1000);  // Wait for 1 second before printing the next number
   }
+
+  Serial.print("\nData Collection Round: ");
+  Serial.println(round_id);
 
   // Generate a new batch ID for the current 5-second timeframe
   batch_id = random(100000, 999999);
@@ -167,6 +172,8 @@ void loop() {
     // Respect ThingSpeak's rate limit (1 update every 15 seconds per channel)
     delay(15000);
   }
+
+  round_id++;
 
   // Delay before collecting the next batch
   Serial.println("Waiting before starting the next batch...");
