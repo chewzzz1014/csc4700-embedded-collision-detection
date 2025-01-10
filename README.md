@@ -11,7 +11,7 @@
 ## TODO
 Code
 - [x] Collect accelerometer data and upload to ThinkSpeak
-- [ ] Preprocess dataset downloaded from ThinkSpeak (2 channel, train data channel and test data channel)
+- [x] Preprocess dataset downloaded from ThinkSpeak (2 channel, train data channel and test data channel)
 - [ ] Train and evaluate classification model
 - [ ] Use trained model to make real-time prediction
 - [ ] Display data and graphs on ThinkSpeak dashboard
