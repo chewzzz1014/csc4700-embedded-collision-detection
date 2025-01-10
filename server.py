@@ -38,10 +38,10 @@ async def predict(data: AccelerationData):
     input_features = np.array(features).reshape(1, -1)
     
     # Make a prediction
-    prediction = model.predict(input_features)[0]  # Assuming binary classification (0 or 1)
+    prediction = model.predict(input_features)[0]
     
     # Return the prediction
-    return {"collision": bool(prediction)}
+    return int(prediction)
 
 # Run the server (use `uvicorn` command to launch)
 if __name__ == "__main__":
