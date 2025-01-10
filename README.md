@@ -1,5 +1,5 @@
 # csc4700-embedded-collision-detection
-- Perform binary classification (Collision / No collision) using vehicle acceleration data (x,y,z axis acceleration) collected within 5 seconds timeframe.
+- Perform binary classification (Collision / No collision) using vehicle acceleration data (x,y,z axis acceleration) collected within 5 seconds timeframe. Data collected within same timeframe is identified by an unique `batch_id`
 - Display real-time data collected and prediction made on ThinkSpeak dashboard
 
 ## Hardware & Software Used
