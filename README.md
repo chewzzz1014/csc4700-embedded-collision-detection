@@ -1,19 +1,22 @@
 # csc4700-embedded-collision-detection
+- Perform binary classification (Collision / No collision) using vehicle acceleration data (x,y,z axis acceleration) collected within 5 seconds timeframe.
+- Display real-time data collected and prediction made on ThinkSpeak dashboard
 
-## Hardware Use
-- Arduino UNO
+## Hardware & Software Used
 - ADXL345 Accelerometer
 - ESP-32 Wifi Module
+- ThinkSpeak (Dashboard & store dataset collected)
+- Google Colab (ML)
 
 ## TODO
 Code
-- [ ] Collect accelerometer data and write into csv or upload to cloud
+- [x] Collect accelerometer data and upload to ThinkSpeak
+- [ ] Preprocess dataset downloaded from ThinkSpeak (2 channel, train data channel and test data channel)
 - [ ] Train classification model
 - [ ] Use trained model to make real-time prediction
-- [ ] Connect to cloud and send data
-- [ ] Dashboard connect to cloud and render graphs
+- [ ] Display data and graphs on ThinkSpeak dashboard
 
 Non-Code
 - [ ] tinkercard architectural diagram
 - [ ] flowchart for methodology
-- [ ] choose cloud and dashboard platform
+- [ ] other diagrams
