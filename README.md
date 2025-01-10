@@ -1,6 +1,8 @@
 # csc4700-embedded-collision-detection
-- Perform binary classification (Collision / No collision) using vehicle acceleration data (x,y,z axis acceleration) collected using accelerometer sensor within 5 seconds timeframe. Data collected within same timeframe is identified by an unique `batch_id`
-- Display real-time data collected and prediction made on ThinkSpeak dashboard
+- Perform binary classification (Collision / No collision) using vehicle acceleration data (x,y,z axis acceleration) collected using accelerometer sensor within 3-seconds timeframe. 
+- Entries collected within same timeframe is identified by an unique `batch_id`
+- 5 entries of data within 3-seconds timeframe form a complete journey. All entries in the same journey will always have same `is_collision` value.
+- Display real-time data collected and prediction made on ThinkSpeak dashboard (Note: ThinkSpeak has limitation of 15 seconds between requests sent)
 
 # How to launch Trained-Model-Hosting Server
 1. Activate virtual env (if any)

@@ -7,7 +7,6 @@ fastapi==0.115.6
 h11==0.14.0
 idna==3.10
 joblib==1.4.2
-numpy==2.2.1
 pydantic==2.10.5
 pydantic_core==2.27.2
 scikit-learn==1.6.0

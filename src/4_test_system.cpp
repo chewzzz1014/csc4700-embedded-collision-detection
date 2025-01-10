@@ -5,71 +5,200 @@
 #include <HTTPClient.h>
 
 // WiFi credentials
-const char* ssid = "Your_WiFi_SSID";
-const char* password = "Your_WiFi_Password";
+const char* ssid = "chewzzz";
+const char* password = "72700cc80790";
 
-// ThingSpeak settings
-const char* server = "http://api.thingspeak.com/update";
-const char* apiKey = "YOUR_API_WRITE_KEY";
+// FastAPI endpoint settings
+const char* endpoint = "http://localhost:8000/predict/";
+
+const char* apiKey = "Q2NJEC48ZJSUM5GO";
 
 // ADXL345 setup
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 
+// Data collection settings
+const int collectionTime = 3000;  // Timeframe for data collection in milliseconds (5 seconds)
+const int totalEntries = 5;      // Collect exactly 5 entries in each timeframe
+const int dataInterval = collectionTime / totalEntries; // Interval between each data point
+unsigned long startTime;
+
+// Batch ID and round ID
+unsigned long batch_id;
+int round_id = 1;
+
 WiFiClient client;
 
 void setup() {
-  Serial.begin(115200);
-  
+  Serial.begin(9600);
+
   // Initialize ADXL345
+  Serial.println("Initializing ADXL345...");
   if (!accel.begin()) {
-    Serial.println("No ADXL345 detected!");
+    Serial.println("Error: No ADXL345 detected! Check your connections.");
     while (1);
   }
-  accel.setRange(ADXL345_RANGE_16_G); // Set range to ±16G
-  
+  accel.setRange(ADXL345_RANGE_16_G);
+  Serial.println("ADXL345 initialized successfully.");
+
   // Connect to Wi-Fi
+  Serial.println("Connecting to Wi-Fi...");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Connecting to Wi-Fi...");
+    Serial.println("Still connecting...");
   }
-  Serial.println("Connected to Wi-Fi");
+  Serial.print("Connected to Wi-Fi. IP address: ");
+  Serial.println(WiFi.localIP());
 }
 
 void loop() {
-  sensors_event_t event;
-  accel.getEvent(&event);
+  Serial.print("\nData Collection Round: ");
+  Serial.println(round_id);
 
-  // Collect accelerometer data
-  float x = event.acceleration.x;
-  float y = event.acceleration.y;
-  float z = event.acceleration.z;
-
-  // Send data to server (which runs the model for prediction)
-  String url = "http://your_server_address/predict?x=" + String(x) + "&y=" + String(y) + "&z=" + String(z);
-  HTTPClient http;
-  
-  // Make the HTTP request to the server
-  http.begin(url);
-  int httpCode = http.GET();
-  
-  if (httpCode > 0) {
-    String payload = http.getString();
-    Serial.println("Received prediction: " + payload);
-    
-    // Send accelerometer data and prediction to ThingSpeak
-    String postData = String("api_key=") + apiKey +
-                      "&field1=" + String(x) +
-                      "&field2=" + String(y) +
-                      "&field3=" + String(z) +
-                      "&field4=" + payload;  // The server response (prediction)
-    http.begin("http://api.thingspeak.com/update");
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    http.POST(postData);
-  } else {
-    Serial.println("Error in HTTP request");
+  int countdownSeconds = 3; // Adjust countdown duration as needed
+  Serial.println("Starting data collection in:");
+  for (int i = countdownSeconds; i > 0; i--) {
+    Serial.print(i);
+    Serial.println("...");
+    delay(1000); // Wait for 1 second
   }
 
-  http.end();
-  delay(1000);  // Collect and send data every second
+  // Generate a new batch ID
+  batch_id = random(100000, 999999);
+  Serial.print("\nNew Batch ID: ");
+  Serial.println(batch_id);
+
+  // Collect data for the timeframe
+  Serial.println("Starting data collection...");
+  String xValues = "[";
+  String yValues = "[";
+  String zValues = "[";
+  String dataBuffer[totalEntries];  // Buffer for collected data
+  int dataCount = 0;
+  startTime = millis();
+
+  while (dataCount < totalEntries) {
+    sensors_event_t event;
+    accel.getEvent(&event);
+
+    // Collect accelerometer data
+    float x = event.acceleration.x;
+    float y = event.acceleration.y;
+    float z = event.acceleration.z;
+
+    // Append data to buffers
+    xValues += String(x) + (dataCount < totalEntries - 1 ? "," : "");
+    yValues += String(y) + (dataCount < totalEntries - 1 ? "," : "");
+    zValues += String(z) + (dataCount < totalEntries - 1 ? "," : "");
+
+    // Store raw data
+    dataBuffer[dataCount] = String(x) + "," + String(y) + "," + String(z) + "," + String(batch_id);
+
+    Serial.print("Collected Entry ");
+    Serial.print(dataCount + 1);
+    Serial.print(": ");
+    Serial.println(dataBuffer[dataCount]);
+
+    dataCount++;
+    delay(dataInterval);
+  }
+
+  xValues += "]";
+  yValues += "]";
+  zValues += "]";
+
+  // Prepare JSON payload
+  String jsonPayload = "{\"x\":" + xValues + ",\"y\":" + yValues + ",\"z\":" + zValues + "}";
+
+  // Send data to FastAPI endpoint for prediction
+  int is_collision = getPrediction(jsonPayload);
+
+  // Update all entries with the same is_collision value
+  for (int i = 0; i < totalEntries; i++) {
+    dataBuffer[i] += "," + String(is_collision);
+  }
+
+  // Upload data to ThingSpeak
+  uploadToThingSpeak(dataBuffer);
+
+  round_id++;
+
+  // Delay before starting the next round
+  Serial.println("Waiting before starting the next batch...");
+  delay(1000);
+}
+
+int getPrediction(String payload) {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(endpoint);
+    http.addHeader("Content-Type", "application/json");
+
+    int httpResponseCode = http.POST(payload);
+    Serial.println("xxxxxxxxxxxxxxxxxxxxxxxx");
+    Serial.println(payload);
+    Serial.println(httpResponseCode);
+    if (httpResponseCode == 200) {
+      String response = http.getString();
+      Serial.println("Response from server: " + response);
+      http.end();
+      return response.toInt();  // Return collision prediction (0 or 1)
+    } else {
+      Serial.println("Error: Failed to get prediction. HTTP Response Code: " + String(httpResponseCode));
+      http.end();
+      return 0;  // Default to no collision
+    }
+  } else {
+    Serial.println("Error: Wi-Fi not connected.");
+    return 0;  // Default to no collision
+  }
+}
+
+void uploadToThingSpeak(String dataBuffer[]) {
+  Serial.println("\nUploading data to ThingSpeak...");
+  for (int i = 0; i < totalEntries; i++) {
+    // Log progress
+    Serial.print("Uploading entry ");
+    Serial.print(i + 1);
+    Serial.print("/");
+    Serial.println(totalEntries);
+
+    if (client.connect("api.thingspeak.com", 80)) {
+      // Parse data entry
+      String dataEntry = dataBuffer[i];
+      int commaIndex1 = dataEntry.indexOf(",");
+      int commaIndex2 = dataEntry.indexOf(",", commaIndex1 + 1);
+      int commaIndex3 = dataEntry.indexOf(",", commaIndex2 + 1);
+      int commaIndex4 = dataEntry.indexOf(",", commaIndex3 + 1);
+
+      String x = dataEntry.substring(0, commaIndex1);
+      String y = dataEntry.substring(commaIndex1 + 1, commaIndex2);
+      String z = dataEntry.substring(commaIndex2 + 1, commaIndex3);
+      String batchID = dataEntry.substring(commaIndex3 + 1, commaIndex4);
+      String collision = dataEntry.substring(commaIndex4 + 1);
+
+      // Format POST data
+      String postData = String("api_key=") + apiKey +
+                        "&field1=" + x +
+                        "&field2=" + y +
+                        "&field3=" + z +
+                        "&field4=" + collision +
+                        "&field5=" + batchID;
+
+      // Send HTTP POST request
+      client.println("POST /update HTTP/1.1");
+      client.println("Host: api.thingspeak.com");
+      client.println("Content-Type: application/x-www-form-urlencoded");
+      client.println("Content-Length: " + String(postData.length()));
+      client.println();
+      client.println(postData);
+
+      // Log success
+      Serial.println("Entry " + String(i + 1) + " uploaded successfully.");
+      delay(15000);  // Respect ThingSpeak's rate limit
+    } else {
+      // Log error
+      Serial.println("Error: Failed to connect to ThingSpeak server for entry " + String(i + 1) + ".");
+    }
+  }
 }
