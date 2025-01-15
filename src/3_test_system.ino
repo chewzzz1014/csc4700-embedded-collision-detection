@@ -10,8 +10,8 @@
 WiFiMulti wifiMulti;
 
 // WiFi credentials
-const char* ssid = "XXX";
-const char* password = "XXX";
+const char* ssid = "Xiaomi 14T";
+const char* password = "51522zzwlwlbb";
 
 // Server endpoint configuration
 const char* endpoint = "http://192.168.255.45:8000/predict";
@@ -168,27 +168,14 @@ int getPrediction(String payload) {
         String response = http.getString();
         Serial.println("Response from server:");
         Serial.println(response);
+        return response.toInt();
     } else {
         Serial.print("HTTP request failed with error code: ");
-        Serial.println(httpResponseCode);
-    }
-
-    String response = "{}";
-    
-    if (httpResponseCode > 0) {
-        response = http.getString();
-        Serial.println("Response:");
-        Serial.println(response);
-    } else {
-        Serial.print("Error code: ");
         Serial.println(httpResponseCode);
     }
     
     http.end();
     
-    if (httpResponseCode == 200) {
-        return response.toInt();
-    }
     
     return 0;
 }
@@ -196,6 +183,12 @@ int getPrediction(String payload) {
 void uploadToThingSpeak(String dataBuffer[]) {
   Serial.println("\nUploading data to ThingSpeak...");
   for (int i = 0; i < totalEntries; i++) {
+    // Print the dataBuffer value before uploading
+    Serial.print("Data Buffer Entry ");
+    Serial.print(i + 1);
+    Serial.print(": ");
+    Serial.println(dataBuffer[i]);
+
     // Log progress
     Serial.print("Uploading entry ");
     Serial.print(i + 1);
@@ -216,18 +209,22 @@ void uploadToThingSpeak(String dataBuffer[]) {
       String batchID = dataEntry.substring(commaIndex3 + 1, commaIndex4);
       String collision = dataEntry.substring(commaIndex4 + 1);
 
-      // Format POST data
-      String postData = String("api_key=") + apiKey +
-                        "&field1=" + x +
-                        "&field2=" + y +
-                        "&field3=" + z +
-                        "&field4=" + collision +
-                        "&field5=" + batchID;
+      // Format POST data as JSON for better clarity and correctness
+      String postData = "{\"api_key\":\"" + String(apiKey) + "\","
+                        "\"field1\":" + x + ","
+                        "\"field2\":" + y + ","
+                        "\"field3\":" + z + ","
+                        "\"field4\":" + collision + ","
+                        "\"field5\":" + batchID + "}";
+
+      // Print the POST data
+      Serial.println("\nPOST Data: ");
+      Serial.println(postData);
 
       // Send HTTP POST request
       client.println("POST /update HTTP/1.1");
       client.println("Host: api.thingspeak.com");
-      client.println("Content-Type: application/x-www-form-urlencoded");
+      client.println("Content-Type: application/json");
       client.println("Content-Length: " + String(postData.length()));
       client.println();
       client.println(postData);
