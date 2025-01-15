@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import numpy as np
 import joblib
@@ -31,6 +32,14 @@ class AccelerationData(BaseModel):
 # Initialize FastAPI app
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
+
 @app.middleware("http")
 async def log_request(request: Request, call_next):
     """Middleware to log incoming requests and responses."""
@@ -40,7 +49,11 @@ async def log_request(request: Request, call_next):
     logging.info(f"Response status: {response.status_code}")
     return response
 
-@app.get("/predict/")
+@app.get("/hello")
+async def hello():
+    return "Hello World"
+
+@app.post("/predict")
 async def predict(data: AccelerationData):
     logging.info(f"Received data: x={data.x}, y={data.y}, z={data.z}")
 
@@ -82,5 +95,4 @@ async def predict(data: AccelerationData):
 # Run the server (use `uvicorn` command to launch)
 if __name__ == "__main__":
     import uvicorn
-    # uvicorn.run(app, host='192.168.114.45', port=8000)
-    uvicorn.run("server:app", host="192.168.114.45", port=8000)
+    uvicorn.run("server:app", host="0.0.0.0", port=8000)

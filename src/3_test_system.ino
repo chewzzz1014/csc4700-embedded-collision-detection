@@ -3,21 +3,26 @@
 #include <Adafruit_ADXL345_U.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiMulti.h>
+
+#define USE_SERIAL Serial
+
+WiFiMulti wifiMulti;
 
 // WiFi credentials
-const char* ssid = "XXXX";
-const char* password = "XXXXX";
+const char* ssid = "XXX";
+const char* password = "XXX";
 
-// FastAPI endpoint settings
-const char* endpoint = "http://XXXXXX:8000/predict";
+// Server endpoint configuration
+const char* endpoint = "http://192.168.255.45:8000/predict";
 
-const char* apiKey = "XXXX";
+const char* apiKey = "Q2NJEC48ZJSUM5GO";
 
 // ADXL345 setup
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 
 // Data collection settings
-const int collectionTime = 3000;  // Timeframe for data collection in milliseconds (5 seconds)
+const int collectionTime = 3000;  // Timeframe for data collection in milliseconds (3 seconds)
 const int totalEntries = 5;      // Collect exactly 5 entries in each timeframe
 const int dataInterval = collectionTime / totalEntries; // Interval between each data point
 unsigned long startTime;
@@ -49,6 +54,21 @@ void setup() {
   }
   Serial.print("Connected to Wi-Fi. IP address: ");
   Serial.println(WiFi.localIP());
+
+  // Test network connectivity
+  Serial.println("Testing network connectivity...");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
+  
+  // Try to ping the server
+  Serial.print("Attempting to connect to server...");
+  WiFiClient testClient;
+  if (testClient.connect("192.168.255.45", 8000)) {
+    Serial.println("Success!");
+    testClient.stop();
+  } else {
+    Serial.println("Failed!");
+  }
 }
 
 void loop() {
@@ -129,29 +149,48 @@ void loop() {
 }
 
 int getPrediction(String payload) {
-  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\n--- Starting Prediction Request ---");
+    Serial.print("Current WiFi status: ");
+    Serial.println(WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected");
+    
     HTTPClient http;
     http.begin(endpoint);
     http.addHeader("Content-Type", "application/json");
-
-    int httpResponseCode = http.POST(payload);
-    Serial.println("xxxxxxxxxxxxxxxxxxxxxxxx");
+    
+    Serial.println("Sending payload:");
     Serial.println(payload);
+    
+    int httpResponseCode = http.POST(payload);
+    Serial.print("HTTP Response code: ");
     Serial.println(httpResponseCode);
-    if (httpResponseCode == 200) {
-      String response = http.getString();
-      Serial.println("Response from server: " + response);
-      http.end();
-      return response.toInt();  // Return collision prediction (0 or 1)
+
+    if (httpResponseCode > 0) {
+        String response = http.getString();
+        Serial.println("Response from server:");
+        Serial.println(response);
     } else {
-      Serial.println("Error: Failed to get prediction. HTTP Response Code: " + String(httpResponseCode));
-      http.end();
-      return 0;  // Default to no collision
+        Serial.print("HTTP request failed with error code: ");
+        Serial.println(httpResponseCode);
     }
-  } else {
-    Serial.println("Error: Wi-Fi not connected.");
-    return 0;  // Default to no collision
-  }
+
+    String response = "{}";
+    
+    if (httpResponseCode > 0) {
+        response = http.getString();
+        Serial.println("Response:");
+        Serial.println(response);
+    } else {
+        Serial.print("Error code: ");
+        Serial.println(httpResponseCode);
+    }
+    
+    http.end();
+    
+    if (httpResponseCode == 200) {
+        return response.toInt();
+    }
+    
+    return 0;
 }
 
 void uploadToThingSpeak(String dataBuffer[]) {
