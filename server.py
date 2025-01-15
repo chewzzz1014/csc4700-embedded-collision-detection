@@ -82,4 +82,5 @@ async def predict(data: AccelerationData):
 # Run the server (use `uvicorn` command to launch)
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=80, reload=True)
+    # uvicorn.run(app, host='192.168.114.45', port=8000)
+    uvicorn.run("server:app", host="192.168.114.45", port=8000)

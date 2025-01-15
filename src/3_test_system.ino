@@ -5,13 +5,13 @@
 #include <HTTPClient.h>
 
 // WiFi credentials
-const char* ssid = "chewzzz";
-const char* password = "72700cc80790";
+const char* ssid = "XXXX";
+const char* password = "XXXXX";
 
 // FastAPI endpoint settings
-const char* endpoint = "http://localhost:8000/predict/";
+const char* endpoint = "http://XXXXXX:8000/predict";
 
-const char* apiKey = "Q2NJEC48ZJSUM5GO";
+const char* apiKey = "XXXX";
 
 // ADXL345 setup
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);

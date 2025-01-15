@@ -34,6 +34,7 @@ Code
 - [ ] Display data and graphs on ThinkSpeak dashboard
 
 Non-Code
-- [ ] tinkercard architectural diagram
-- [ ] flowchart for methodology
-- [ ] other diagrams
+- [x] tinkercard architectural diagram
+- [x] flowchart for methodology
+- [x] architectural diagram
+- [ ] report and presentation slide
